@@ -51,6 +51,7 @@ class AssetAccount(AbstractAccount):
         event_bus.add_listener(EVENT.TICK, self._update_last_price)
 
     def get_state(self):
+        """"""
         return {
             'positions': {
                 order_book_id: position.get_state()
@@ -62,6 +63,7 @@ class AssetAccount(AbstractAccount):
         }
 
     def set_state(self, state):
+        """"""
         self._frozen_cash = state['frozen_cash']
         self._backward_trade_set = set(state['backward_trade_set'])
 
@@ -88,14 +90,11 @@ class AssetAccount(AbstractAccount):
             position.update_last_price()
 
     def fast_forward(self, orders, trades=list()):
-        """
-        同步账户信息至最新状态
-        :param orders: 订单列表，主要用来计算frozen_cash，如果为None则不计算frozen_cash
-        :param trades: 交易列表，基于Trades 将当前Positions ==> 最新Positions
-        """
+        """"""
         raise NotImplementedError
 
     def order(self, order_book_id, quantity, style, target=False):
+        """"""
         raise NotImplementedError
 
     def _on_order_pending_new(self, event):
@@ -123,7 +122,7 @@ class AssetAccount(AbstractAccount):
     @property
     def positions(self):
         """
-        [dict] 持仓
+        [dict] 持仓字典
         """
         return self._positions
 
@@ -190,7 +189,7 @@ class AssetAccount(AbstractAccount):
         期货账户总资金会受保证金变化的影响变化，期货账户总资金 = 总权益 - 保证金
 
         """
-        return self.total_value - self.margin
+        return self._static_total_value + self.daily_pnl - self.margin
 
     @property
     def position_pnl(self):

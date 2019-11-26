@@ -22,6 +22,7 @@ from rqalpha.const import SIDE, POSITION_EFFECT, POSITION_DIRECTION
 from rqalpha.utils.i18n import gettext as _
 
 from rqalpha.utils.repr import property_repr
+from rqalpha.utils import is_valid_price
 
 
 class AssetPosition(object):
@@ -124,6 +125,8 @@ class AssetPosition(object):
     @property
     def position_pnl(self):
         quantity = self._logical_old_quantity
+        if quantity == 0:
+            return 0
         return quantity * self.contract_multiplier * (self.last_price - self.prev_close) * self._direction_factor
 
     @property
@@ -165,13 +168,9 @@ class AssetPosition(object):
 
     @property
     def prev_close(self):
-        if self._prev_close is None:
+        if not is_valid_price(self._prev_close):
             env = Environment.get_instance()
             self._prev_close = env.data_proxy.get_prev_close(self._order_book_id, env.trading_dt)
-            if self._prev_close != self._prev_close:
-                raise RuntimeError(
-                    _("previous close price of position {} is not supposed to be nan").format(self._order_book_id)
-                )
         return self._prev_close
 
     @property
@@ -206,7 +205,7 @@ class AssetPosition(object):
             self._trade_cost += trade.last_price * trade.last_quantity
 
             if self.market_tplus >= 1:
-                self._non_closable += 1
+                self._non_closable += trade.last_quantity
             return 0
         else:
             if trade.position_effect == POSITION_EFFECT.CLOSE_TODAY:
@@ -251,6 +250,7 @@ class AssetPositionProxy(AbstractPosition):
         raise NotImplementedError
 
     def get_state(self):
+        """"""
         return {
             "order_book_id": self.order_book_id,
             "long": self._long.get_state(),
@@ -258,6 +258,7 @@ class AssetPositionProxy(AbstractPosition):
         }
 
     def set_state(self, state):
+        """"""
         self._long.set_state(state["long"])
         self._short.set_state(state["short"])
 
